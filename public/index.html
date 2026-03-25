@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgeGate — Privacy-First Age Verification</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #111111;
+      --bg-card-2: #161616;
+      --border: #222222;
+      --accent: #00d4aa;
+      --accent-dim: rgba(0, 212, 170, 0.12);
+      --accent-hover: #00f0c0;
+      --text: #f0f0f0;
+      --text-muted: #666666;
+      --text-dim: #999999;
+      --red: #ff4d4d;
+      --yellow: #f0a020;
+      --radius: 12px;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #000;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(0, 212, 170, 0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.8px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .hero-sub {
+      font-size: 16px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* ── Privacy pills ── */
+    .privacy-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin: 24px 0;
+    }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-dim);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    .pill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+
+    /* ── Verify button ── */
+    .btn-verify {
+      width: 100%;
+      padding: 16px 24px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: -0.2px;
+    }
+
+    .btn-verify:hover { background: var(--accent-hover); }
+    .btn-verify:active { transform: scale(0.99); }
+    .btn-verify:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .world-logo {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Demo button ── */
+    .btn-demo {
+      width: 100%;
+      padding: 13px 24px;
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-demo:hover {
+      border-color: #444;
+      color: var(--text);
+    }
+
+    /* ── How it works ── */
+    .how-it-works {
+      margin-top: 24px;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+
+    .how-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0, 212, 170, 0.2);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .step-text strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── Success state ── */
+    #success-panel {
+      display: none;
+    }
+
+    .success-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .success-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(0, 212, 170, 0.12);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .success-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+    }
+
+    .success-sub {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .content-box {
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .content-box h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .content-box p {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .btn-content {
+      width: 100%;
+      padding: 13px 24px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(0, 212, 170, 0.2);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s;
+      margin-bottom: 12px;
+    }
+
+    .btn-content:hover {
+      background: rgba(0, 212, 170, 0.18);
+    }
+
+    #content-result {
+      display: none;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .proof-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .meta-key {
+      color: var(--text-muted);
+    }
+
+    .meta-val {
+      color: var(--text-dim);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .demo-notice {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(240, 160, 32, 0.08);
+      border: 1px solid rgba(240, 160, 32, 0.2);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--yellow);
+      margin-top: 12px;
+    }
+
+    .btn-reset {
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .btn-reset:hover { color: var(--text); }
+
+    /* ── Loading ── */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 24px 40px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    footer a:hover { color: var(--text-dim); }
+
+    .sep { opacity: 0.3; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🛡</div>
+      AgeGate
+    </div>
+    <span class="badge">Privacy-First</span>
+  </header>
+
+  <!-- Main -->
+  <main>
+    <div class="container">
+
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-eyebrow">Age Verification Required</div>
+        <h1>This content requires<br/>age verification</h1>
+        <p class="hero-sub">
+          Verify you're 18+ using World ID — a zero-knowledge proof.
+          The site receives only <strong style="color: var(--text)">yes or no</strong>.
+          No passport. No selfie. No personal data stored.
+        </p>
+        <div class="privacy-pills">
+          <div class="pill"><span class="pill-dot"></span>Zero personal data</div>
+          <div class="pill"><span class="pill-dot"></span>ZK proof only</div>
+          <div class="pill"><span class="pill-dot"></span>One-time use</div>
+          <div class="pill"><span class="pill-dot"></span>Orb-verified</div>
+        </div>
+      </div>
+
+      <!-- Verification card -->
+      <div class="card" id="verify-panel">
+        <div id="idkit-root"></div>
+
+        <button class="btn-verify" id="btn-verify" onclick="startVerification()">
+          <!-- World ID SVG logo -->
+          <svg class="world-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="16" fill="#000"/>
+            <circle cx="16" cy="16" r="10" stroke="#fff" stroke-width="2" fill="none"/>
+            <circle cx="16" cy="16" r="4" fill="#fff"/>
+          </svg>
+          Verify with World ID
+        </button>
+
+        <div class="divider">or</div>
+
+        <button class="btn-demo" id="btn-demo" onclick="simulateVerification()">
+          ⚡ Demo: Simulate Verification
+        </button>
+      </div>
+
+      <!-- How it works -->
+      <div class="how-it-works">
+        <div class="how-title">How it works</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Open World App</strong> on your phone — you'll receive a verification request</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Approve the request</strong> — World ID generates a zero-knowledge proof of your age</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>Access granted</strong> — the site confirms you're 18+, no personal data transmitted</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success panel (hidden by default) -->
+      <div class="card" id="success-panel">
+        <div class="success-header">
+          <div class="success-icon">✓</div>
+          <div>
+            <div class="success-title">Access Granted</div>
+            <div class="success-sub">Age verified via World ID</div>
+          </div>
+        </div>
+
+        <button class="btn-content" onclick="fetchContent()">
+          🔓 Load Protected Content
+        </button>
+
+        <div id="content-result"></div>
+
+        <div class="proof-meta" id="proof-meta">
+          <div class="meta-row">
+            <span class="meta-key">Verification</span>
+            <span class="meta-val" id="meta-level">orb</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Nullifier hash</span>
+            <span class="meta-val" id="meta-nullifier">—</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-key">Action</span>
+            <span class="meta-val" id="meta-action">verify-age</span>
+          </div>
+        </div>
+
+        <div class="demo-notice" id="demo-notice">
+          ⚡ Demo mode — configure <code>WORLD_APP_ID</code> for real verification
+        </div>
+
+        <button class="btn-reset" onclick="resetVerification()">← Verify again</button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    Powered by
+    <a href="https://world.org" target="_blank">World ID</a>
+    <span class="sep">•</span>
+    <a href="https://docs.world.org/agents/agent-kit" target="_blank">AgentKit</a>
+    <span class="sep">•</span>
+    <a href="https://x402.org" target="_blank">x402</a>
+    <span class="sep">•</span>
+    Built for Coinbase × World Hackathon 2026
+  </footer>
+
+</div>
+
+<!-- React + IDKit via CDN -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@worldcoin/idkit@1.3.1/dist/idkit.umd.js" crossorigin></script>
+
+<script>
+  // ── State ─────────────────────────────────────────────────────────────────
+
+  /** @type {string} */
+  let APP_ID = ''
+  /** @type {string} */
+  let ACTION = 'verify-age'
+
+  // ── Task 5: Fetch config on page load ─────────────────────────────────────
+
+  async function loadConfig() {
+    try {
+      const res = await fetch('/config')
+      if (!res.ok) throw new Error('Failed to fetch /config: ' + res.status)
+      /** @type {{ app_id: string, action: string }} */
+      const config = await res.json()
+      APP_ID = config.app_id
+      ACTION = config.action
+      console.log('[config] Loaded:', config)
+    } catch (err) {
+      console.error('[config] Error loading config:', err.message)
+    }
+  }
+
+  // Load config immediately
+  loadConfig()
+
+  // Check if already verified (localStorage)
+  ;(function checkStoredSession() {
+    const stored = localStorage.getItem('agegate_nullifier')
+    if (stored) {
+      showSuccess(stored, stored.startsWith('demo_'))
+    }
+  })()
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  function showSuccess(nullifierHash, isDemo) {
+    document.getElementById('verify-panel').style.display = 'none'
+    document.getElementById('success-panel').style.display = 'block'
+    document.getElementById('meta-nullifier').textContent = nullifierHash ?? '—'
+    document.getElementById('meta-action').textContent = ACTION
+    if (isDemo) {
+      document.getElementById('demo-notice').style.display = 'flex'
+    }
+  }
+
+  function resetVerification() {
+    localStorage.removeItem('agegate_nullifier')
+    document.getElementById('verify-panel').style.display = 'block'
+    document.getElementById('success-panel').style.display = 'none'
+    document.getElementById('demo-notice').style.display = 'none'
+    document.getElementById('content-result').style.display = 'none'
+  }
+
+  function setBtnLoading(loading) {
+    const btn = document.getElementById('btn-verify')
+    const demo = document.getElementById('btn-demo')
+    btn.disabled = loading
+    demo.disabled = loading
+    if (loading) {
+      btn.innerHTML = '<span class="spinner"></span> Verifying…'
+    } else {
+      btn.innerHTML = `
+        <svg class="world-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="16" fill="#000"/>
+          <circle cx="16" cy="16" r="10" stroke="#fff" stroke-width="2" fill="none"/>
+          <circle cx="16" cy="16" r="4" fill="#fff"/>
+        </svg>
+        Verify with World ID`
+    }
+  }
+
+  // ── POST /verify-age ───────────────────────────────────────────────────────
+
+  async function sendProof(proof) {
+    setBtnLoading(true)
+    try {
+      const res = await fetch('/verify-age', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(proof),
+      })
+      /** @type {{ verified: boolean, nullifier_hash?: string, demo?: boolean, error?: string }} */
+      const data = await res.json()
+      if (data.verified) {
+        // Save nullifier_hash to localStorage
+        const nullifier = data.nullifier_hash ?? ''
+        localStorage.setItem('agegate_nullifier', nullifier)
+        console.log('[verify] Success, nullifier saved:', nullifier)
+        showSuccess(nullifier, !!data.demo)
+      } else {
+        alert('Verification failed: ' + (data.error ?? 'Unknown error'))
+      }
+    } catch (err) {
+      alert('Network error: ' + err.message)
+    } finally {
+      setBtnLoading(false)
+    }
+  }
+
+  // ── Demo simulation ────────────────────────────────────────────────────────
+
+  function simulateVerification() {
+    setBtnLoading(true)
+    setTimeout(async () => {
+      // Send empty proof to trigger demo mode on server
+      await sendProof({})
+    }, 800)
+  }
+
+  // ── GET /content with Bearer token ─────────────────────────────────────────
+
+  async function fetchContent() {
+    const nullifier = localStorage.getItem('agegate_nullifier')
+    const resultEl = document.getElementById('content-result')
+
+    if (!nullifier) {
+      resultEl.textContent = 'No verification token found. Please verify first.'
+      resultEl.style.display = 'block'
+      return
+    }
+
+    try {
+      const res = await fetch('/content', {
+        headers: { 'Authorization': 'Bearer ' + nullifier },
+      })
+      /** @type {{ message?: string, content?: string, error?: string }} */
+      const data = await res.json()
+
+      if (res.ok) {
+        resultEl.innerHTML = '<strong style="color: var(--accent);">' + escapeHtml(data.message) + '</strong><br><br>' + escapeHtml(data.content)
+        resultEl.style.display = 'block'
+        console.log('[content] Loaded protected content')
+      } else {
+        resultEl.textContent = 'Error ' + res.status + ': ' + (data.error ?? 'Unknown error')
+        resultEl.style.display = 'block'
+        console.log('[content] Error:', res.status, data.error)
+      }
+    } catch (err) {
+      resultEl.textContent = 'Network error: ' + err.message
+      resultEl.style.display = 'block'
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div')
+    div.textContent = str ?? ''
+    return div.innerHTML
+  }
+
+  // ── World ID IDKit widget ──────────────────────────────────────────────────
+
+  function startVerification() {
+    // Check if IDKit loaded
+    if (typeof IDKit === 'undefined' || !IDKit.IDKitWidget) {
+      // IDKit not available — fall back to demo
+      simulateVerification()
+      return
+    }
+
+    if (!APP_ID) {
+      console.warn('[idkit] APP_ID not loaded yet, falling back to demo')
+      simulateVerification()
+      return
+    }
+
+    const root = document.getElementById('idkit-root')
+
+    const element = React.createElement(IDKit.IDKitWidget, {
+      app_id: APP_ID,
+      action: ACTION,
+      verification_level: 'orb',
+      onSuccess: async (proof) => {
+        console.log('[idkit] onSuccess, sending proof to /verify-age')
+        await sendProof(proof)
+        // Unmount widget after success
+        ReactDOM.unmountComponentAtNode(root)
+      },
+      handleVerify: async (proof) => {
+        // Server-side verify happens in onSuccess via /verify-age
+      },
+      autoClose: true,
+    }, React.createElement('span', null))
+
+    ReactDOM.render(element, root, () => {
+      // Programmatically open the modal after render
+      const trigger = root.querySelector('button')
+      if (trigger) trigger.click()
+    })
+  }
+</script>
+</body>
+</html>

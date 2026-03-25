@@ -1,0 +1,27 @@
+{
+  "name": "agegate",
+  "version": "1.0.0",
+  "description": "Privacy-first age verification middleware using World ID ZKPs",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsx --env-file=.env src/index.ts",
+    "dev": "tsx watch --env-file=.env src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@hono/node-server": "^1.19.11",
+    "@worldcoin/agentkit": "^0.1.5",
+    "@x402/core": "^2.8.0",
+    "@x402/evm": "^2.8.0",
+    "@x402/hono": "^2.8.0",
+    "hono": "^4.12.9"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}
