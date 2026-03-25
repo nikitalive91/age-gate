@@ -671,35 +671,22 @@ goTo('s3', 's5')
       return
     }
     const root = document.getElementById('idkit-root')
-    let openFn = null
+    const reactRoot = ReactDOM.createRoot(root)
 
-    ReactDOM.render(
+    reactRoot.render(
       React.createElement(IDKit.IDKitWidget, {
         app_id: APP_ID, action: ACTION, verification_level: 'orb',
         onSuccess: async (proof) => {
           console.log('[idkit] onSuccess proof:', proof)
           await sendProof(proof)
-          ReactDOM.unmountComponentAtNode(root)
+          reactRoot.unmount()
         },
         handleVerify: async () => {},
         autoClose: true,
       }, function({ open }) {
-        openFn = open
+        setTimeout(() => { if (open) open() }, 50)
         return React.createElement('span', null)
-      }),
-      root,
-      () => {
-        console.log('[idkit] mounted, openFn:', typeof openFn)
-        if (openFn) {
-          openFn()
-        } else {
-          setTimeout(() => {
-            const t = root.querySelector('button')
-            if (t) t.click()
-            else console.warn('[idkit] No trigger button found')
-          }, 100)
-        }
-      }
+      })
     )
   }
 
