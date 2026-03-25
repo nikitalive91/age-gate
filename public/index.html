@@ -207,23 +207,7 @@
       letter-spacing: -0.3px;
     }
 
-    .btn-upload {
-      width: 100%;
-      padding: 15px;
-      background: #1e1e1e;
-      color: var(--text);
-      border: 1px solid #2a2a2a;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-upload:hover { background: #242424; }
+    /* btn-upload uses btn-cancel styles */
 
     /* ─────────────────────────────────────────────
        SCREEN 4 — Hussar meme
@@ -505,30 +489,14 @@
   </div>
 </div>
 
-<!-- ── SCREEN 3: Upload passport ─────────────────────────────────────── -->
+<!-- ── SCREEN 3: Upload passport + morphing button ───────────────────── -->
 <div class="screen" id="s3">
   <div class="passport-card">
     <div class="passport-emoji">🛂</div>
     <div class="passport-text">Upload your passport<br/>to verify your age</div>
-    <button class="btn-upload" onclick="goTo('s3','s4')">
-      📎 Upload passport
+    <button class="btn-cancel" id="btn-upload" data-stage="0" onclick="advanceUploadStage()">
+      <div class="btn-text" id="btn-upload-text">📎 Upload passport</div>
     </button>
-  </div>
-</div>
-
-<!-- ── SCREEN 4: Hussar meme + morphing button ────────────────────────── -->
-<div class="screen" id="s4">
-  <div class="hussar-wrap">
-    <div class="thought-bubble">
-      Bro… are you SURE<br/>you want to do this? 🤨
-    </div>
-    <div class="hussar-emoji">🫅</div>
-
-    <div class="btn-cancel-wrap">
-      <button class="btn-cancel" id="btn-cancel" data-stage="0" onclick="advanceCancelStage()">
-        <div class="btn-text" id="btn-cancel-text">← Cancel, choose another way</div>
-      </button>
-    </div>
   </div>
 </div>
 
@@ -586,16 +554,6 @@
   let APP_ID = '', ACTION = 'verify-age'
   fetch('/config').then(r => r.json()).then(c => { APP_ID = c.app_id; ACTION = c.action }).catch(() => {})
 
-  // ── Screen transitions ────────────────────────────────────────────────────
-  function goTo(from, to) {
-    const f = document.getElementById(from)
-    const t = document.getElementById(to)
-    f.classList.remove('active')
-    f.classList.add('out')
-    setTimeout(() => f.classList.remove('out'), 450)
-    t.classList.add('active')
-  }
-
   // ── Audio ─────────────────────────────────────────────────────────────────
   function playIntro() {
     const audio = document.getElementById('intro-sound')
@@ -626,10 +584,12 @@
     } catch (e) {}
   }
 
-  // ── Morphing cancel button ────────────────────────────────────────────────
-  const STAGES = [
-    { stage: '0', html: '← Cancel, choose another way' },
-    { stage: '1', html: 'There\'s a safer way &nbsp;→' },
+  // ── Morphing upload button ────────────────────────────────────────────────
+  const UPLOAD_STAGES = [
+    { stage: '0', html: '📎 Upload passport' },
+    { stage: '1', html: '🤨 You sure about this???' },
+    { stage: '1', html: '🤡 Your data. Their server. Their problem.' },
+    { stage: '2', html: '🫅 Bro… there\'s a better way →' },
     { stage: '2', html: 'No passport. No leaks. ZK proof only. →' },
     {
       stage: '3',
@@ -637,27 +597,24 @@
                <circle cx="16" cy="16" r="16" fill="#000"/>
                <circle cx="16" cy="16" r="10" stroke="#fff" stroke-width="2" fill="none"/>
                <circle cx="16" cy="16" r="4" fill="#fff"/>
-             </svg>
-             Verify with World ID`
+             </svg>Verify with World ID`
     },
   ]
 
-  let cancelStage = 0
+  let uploadStage = 0
 
-  function advanceCancelStage() {
-    if (cancelStage >= 3) {
-      // Last stage — start verification
+  function advanceUploadStage() {
+    if (uploadStage >= UPLOAD_STAGES.length - 1) {
       startVerification()
       return
     }
-    cancelStage++
-    const btn = document.getElementById('btn-cancel')
-    const txt = document.getElementById('btn-cancel-text')
-
+    uploadStage++
+    const btn = document.getElementById('btn-upload')
+    const txt = document.getElementById('btn-upload-text')
     txt.classList.add('fade')
     setTimeout(() => {
-      btn.dataset.stage = STAGES[cancelStage].stage
-      txt.innerHTML = STAGES[cancelStage].html
+      btn.dataset.stage = UPLOAD_STAGES[uploadStage].stage
+      txt.innerHTML = UPLOAD_STAGES[uploadStage].html
       txt.classList.remove('fade')
     }, 200)
   }
@@ -722,17 +679,15 @@
 
   function resetDemo() {
     localStorage.removeItem('agegate_nullifier')
-    cancelStage = 0
-    const btn = document.getElementById('btn-cancel')
-    const txt = document.getElementById('btn-cancel-text')
+    uploadStage = 0
+    const btn = document.getElementById('btn-upload')
+    const txt = document.getElementById('btn-upload-text')
     btn.dataset.stage = '0'
-    txt.innerHTML = '← Cancel, choose another way'
+    txt.innerHTML = '📎 Upload passport'
     document.getElementById('content-result').style.display = 'none'
     document.getElementById('demo-notice').style.display = 'none'
-    // Return to s1
-    ;['s2','s3','s4','s5'].forEach(id => {
-      const el = document.getElementById(id)
-      el.classList.remove('active','out')
+    ;['s2','s3','s5'].forEach(id => {
+      document.getElementById(id).classList.remove('active','out')
     })
     document.getElementById('s1').classList.add('active')
   }
@@ -744,6 +699,16 @@
     document.getElementById('meta-nullifier').textContent = stored
     if (stored.startsWith('demo_')) document.getElementById('demo-notice').style.display = 'flex'
     document.getElementById('s5').classList.add('active')
+  }
+
+  // Navigation: s3 → s5 (no s4)
+  function goTo(from, to) {
+    const f = document.getElementById(from)
+    const t = document.getElementById(to)
+    f.classList.remove('active')
+    f.classList.add('out')
+    setTimeout(() => f.classList.remove('out'), 450)
+    t.classList.add('active')
   }
 </script>
 </body>
