@@ -673,21 +673,27 @@ goTo('s3', 's5')
     const root = document.getElementById('idkit-root')
     const reactRoot = ReactDOM.createRoot(root)
 
-    reactRoot.render(
-      React.createElement(IDKit.IDKitWidget, {
-        app_id: APP_ID, action: ACTION, verification_level: 'orb',
+    function IDKitOpener() {
+      const { setOpen } = IDKit.useIDKit({
         onSuccess: async (proof) => {
           console.log('[idkit] onSuccess proof:', proof)
           await sendProof(proof)
           reactRoot.unmount()
         },
+      })
+      React.useEffect(() => { setOpen(true) }, [])
+      return React.createElement(IDKit.IDKitWidget, {
+        app_id: APP_ID, action: ACTION, verification_level: 'orb',
+        onSuccess: async (proof) => {
+          await sendProof(proof)
+          reactRoot.unmount()
+        },
         handleVerify: async () => {},
         autoClose: true,
-      }, function({ open }) {
-        setTimeout(() => { if (open) open() }, 50)
-        return React.createElement('span', null)
       })
-    )
+    }
+
+    reactRoot.render(React.createElement(IDKitOpener))
   }
 
   async function fetchContent() {
