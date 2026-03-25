@@ -509,40 +509,30 @@
 
 <!-- ── SCREEN 5: Success ──────────────────────────────────────────────── -->
 <div class="screen" id="s5">
-  <div class="success-card">
-    <div class="success-head">
-      <div class="success-icon">✓</div>
-      <div>
-        <div class="success-title">Access Granted</div>
-        <div class="success-sub">Age verified — zero data shared</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center;max-width:360px;width:100%">
+
+    <!-- Big checkmark -->
+    <div style="width:80px;height:80px;border-radius:50%;background:rgba(0,212,170,0.1);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:36px">✓</div>
+
+    <div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-0.6px">Access Granted</div>
+      <div style="font-size:14px;color:#555;margin-top:6px">No passport. No data. Just a ZK proof.</div>
+    </div>
+
+    <div style="background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:16px 20px;width:100%;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:#444">Nullifier</span>
+        <span style="color:#555;font-family:monospace;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="meta-nullifier">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:#444">Data shared</span>
+        <span style="color:var(--accent);font-weight:600">None</span>
       </div>
     </div>
 
-    <button class="btn-content" onclick="fetchContent()">🔓 Load Protected Content</button>
-    <div id="content-result"></div>
+    <div id="demo-notice" style="display:none;font-size:12px;color:#f0a020;padding:8px 14px;background:rgba(240,160,32,0.06);border:1px solid rgba(240,160,32,0.14);border-radius:8px;width:100%;text-align:center">⚡ Demo mode</div>
 
-    <div class="content-box">
-      <h3>Protected Content</h3>
-      <p>Verified 18+ via zero-knowledge proof. Your personal data was never shared with this site — only a cryptographic yes.</p>
-    </div>
-
-    <div class="proof-meta">
-      <div class="meta-row">
-        <span class="meta-key">Method</span>
-        <span class="meta-val">World ID ZK Proof</span>
-      </div>
-      <div class="meta-row">
-        <span class="meta-key">Nullifier</span>
-        <span class="meta-val" id="meta-nullifier">—</span>
-      </div>
-      <div class="meta-row">
-        <span class="meta-key">Data shared</span>
-        <span class="meta-val" style="color:var(--accent)">None</span>
-      </div>
-    </div>
-
-    <div class="demo-notice" id="demo-notice">⚡ Demo mode</div>
-    <button class="btn-reset" onclick="resetDemo()">← Start over</button>
+    <button onclick="resetDemo()" style="background:transparent;color:#333;border:none;font-size:13px;cursor:pointer;padding:8px">← Start over</button>
   </div>
 </div>
 
