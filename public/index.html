@@ -519,20 +519,7 @@
       <div style="font-size:14px;color:#555;margin-top:6px">No passport. No data. Just a ZK proof.</div>
     </div>
 
-    <div style="background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:16px 20px;width:100%;display:flex;flex-direction:column;gap:8px">
-      <div style="display:flex;justify-content:space-between;font-size:12px">
-        <span style="color:#444">Nullifier</span>
-        <span style="color:#555;font-family:monospace;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="meta-nullifier">—</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:12px">
-        <span style="color:#444">Data shared</span>
-        <span style="color:var(--accent);font-weight:600">None</span>
-      </div>
-    </div>
-
-    <div id="demo-notice" style="display:none;font-size:12px;color:#f0a020;padding:8px 14px;background:rgba(240,160,32,0.06);border:1px solid rgba(240,160,32,0.14);border-radius:8px;width:100%;text-align:center">⚡ Demo mode</div>
-
-    <button onclick="resetDemo()" style="background:transparent;color:#333;border:none;font-size:13px;cursor:pointer;padding:8px">← Start over</button>
+<button onclick="resetDemo()" style="background:transparent;color:#333;border:none;font-size:13px;cursor:pointer;padding:8px">← Start over</button>
   </div>
 </div>
 
@@ -651,9 +638,7 @@
       if (data.verified) {
         const n = data.nullifier_hash ?? ''
         localStorage.setItem('agegate_nullifier', n)
-        document.getElementById('meta-nullifier').textContent = n
-        if (data.demo) document.getElementById('demo-notice').style.display = 'flex'
-        goTo('s3', 's5')
+goTo('s3', 's5')
       } else {
         alert('Verification failed: ' + (data.error ?? 'Unknown'))
       }
@@ -686,6 +671,8 @@
       return
     }
     const root = document.getElementById('idkit-root')
+    let openFn = null
+
     ReactDOM.render(
       React.createElement(IDKit.IDKitWidget, {
         app_id: APP_ID, action: ACTION, verification_level: 'orb',
@@ -696,16 +683,22 @@
         },
         handleVerify: async () => {},
         autoClose: true,
-      }, React.createElement('span', null)),
+      }, function({ open }) {
+        openFn = open
+        return React.createElement('span', null)
+      }),
       root,
       () => {
-        // Give React time to render before triggering the button
-        setTimeout(() => {
-          const t = root.querySelector('button')
-          console.log('[idkit] trigger button:', t)
-          if (t) t.click()
-          else console.warn('[idkit] No trigger button found in root')
-        }, 100)
+        console.log('[idkit] mounted, openFn:', typeof openFn)
+        if (openFn) {
+          openFn()
+        } else {
+          setTimeout(() => {
+            const t = root.querySelector('button')
+            if (t) t.click()
+            else console.warn('[idkit] No trigger button found')
+          }, 100)
+        }
       }
     )
   }
@@ -735,7 +728,6 @@
     btn.dataset.stage = '0'
     txt.innerHTML = '📎 Upload passport'
     document.getElementById('content-result').style.display = 'none'
-    document.getElementById('demo-notice').style.display = 'none'
     ;['s2','s3','s5'].forEach(id => {
       document.getElementById(id).classList.remove('active','out')
     })
@@ -746,8 +738,6 @@
   const stored = localStorage.getItem('agegate_nullifier')
   if (stored) {
     document.getElementById('s1').classList.remove('active')
-    document.getElementById('meta-nullifier').textContent = stored
-    if (stored.startsWith('demo_')) document.getElementById('demo-notice').style.display = 'flex'
     document.getElementById('s5').classList.add('active')
   }
 
