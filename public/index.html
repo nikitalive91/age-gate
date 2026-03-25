@@ -596,7 +596,7 @@
     { stage: '0', html: '📎 Upload passport' },
     { stage: '1', html: '🤨 You sure about this???' },
     { stage: '1', html: '🤡 Your data. Their server. Their problem.' },
-    { stage: '2', html: '🫅 Bro… there\'s a better way →' },
+    { stage: '2', html: '🫅 There\'s a better way →' },
     { stage: '2', html: 'No passport. No leaks. ZK proof only. →' },
     {
       stage: '3',
@@ -674,17 +674,12 @@ goTo('s3', 's5')
     const reactRoot = ReactDOM.createRoot(root)
 
     function IDKitOpener() {
-      const { setOpen } = IDKit.useIDKit({
-        onSuccess: async (proof) => {
-          console.log('[idkit] onSuccess proof:', proof)
-          await sendProof(proof)
-          reactRoot.unmount()
-        },
-      })
+      const { setOpen } = IDKit.useIDKit()
       React.useEffect(() => { setOpen(true) }, [])
       return React.createElement(IDKit.IDKitWidget, {
-        app_id: APP_ID, action: ACTION, verification_level: 'orb',
+        app_id: APP_ID, action: ACTION, verification_level: 'device',
         onSuccess: async (proof) => {
+          console.log('[idkit] onSuccess:', proof)
           await sendProof(proof)
           reactRoot.unmount()
         },
