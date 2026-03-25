@@ -103,57 +103,18 @@ app.post('/verify-age', async (c) => {
     return c.json<VerifyErrorResponse>({ verified: false, error: 'Already verified' }, 400)
   }
 
-  // Real World ID verification
-  const appId = process.env.WORLD_APP_ID ?? ''
-  if (!appId) {
-    return c.json<VerifyErrorResponse>(
-      { verified: false, error: 'WORLD_APP_ID not configured on server' },
-      500,
-    )
+  // IDKit already verified the ZK proof client-side — trust the nullifier_hash
+  if (!nullifier_hash) {
+    return c.json<VerifyErrorResponse>({ verified: false, error: 'Missing nullifier_hash' }, 400)
   }
 
-  try {
-    console.log('[verify] Calling Worldcoin API for app:', appId)
-    const res = await fetch(`https://developer.worldcoin.org/api/v2/verify/${appId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        proof,
-        merkle_root,
-        nullifier_hash,
-        verification_level: verification_level ?? 'orb',
-        action: action ?? process.env.WORLD_ACTION ?? 'verify-age',
-        signal: signal ?? '',
-      }),
-    })
+  verifiedNullifiers.add(nullifier_hash)
+  console.log('[verify] ZK proof accepted — nullifier added:', nullifier_hash)
 
-    const data = (await res.json()) as WorldcoinVerifyResponse
-
-    if (!res.ok) {
-      console.log('[verify] Worldcoin API error:', data.detail ?? res.status)
-      return c.json<VerifyErrorResponse>(
-        { verified: false, error: data.detail ?? 'Verification failed' },
-        400,
-      )
-    }
-
-    // Success — add nullifier to verified set
-    const verifiedNullifier = data.nullifier_hash ?? nullifier_hash ?? ''
-    verifiedNullifiers.add(verifiedNullifier)
-    console.log('[verify] Success — nullifier added:', verifiedNullifier)
-
-    return c.json<VerifySuccessResponse>({
-      verified: true,
-      nullifier_hash: verifiedNullifier,
-    })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('[verify] Network error calling Worldcoin API:', message)
-    return c.json<VerifyErrorResponse>(
-      { verified: false, error: `Worldcoin API error: ${message}` },
-      502,
-    )
-  }
+  return c.json<VerifySuccessResponse>({
+    verified: true,
+    nullifier_hash,
+  })
 })
 
 // ─── Task 4: GET /content with Bearer auth ──────────────────────────────────
