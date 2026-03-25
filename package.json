@@ -4,7 +4,8 @@
   "description": "Privacy-first age verification middleware using World ID ZKPs",
   "main": "dist/index.js",
   "scripts": {
-    "start": "tsx src/index.ts",
+    "build:frontend": "esbuild src/frontend.jsx --bundle --outfile=public/bundle.js --loader:.jsx=jsx --define:process.env.NODE_ENV='\"production\"' --minify",
+    "start": "npm run build:frontend && tsx src/index.ts",
     "dev": "tsx watch --env-file=.env src/index.ts"
   },
   "keywords": [],
@@ -14,10 +15,14 @@
   "dependencies": {
     "@hono/node-server": "^1.19.11",
     "@worldcoin/agentkit": "^0.1.5",
+    "@worldcoin/idkit": "^1.5.0",
     "@x402/core": "^2.8.0",
     "@x402/evm": "^2.8.0",
     "@x402/hono": "^2.8.0",
-    "hono": "^4.12.9"
+    "esbuild": "^0.27.4",
+    "hono": "^4.12.9",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
