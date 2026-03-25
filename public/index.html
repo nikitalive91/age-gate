@@ -463,7 +463,12 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    #idkit-root { display: none; }
+    #idkit-root {
+      position: fixed;
+      top: -9999px;
+      left: -9999px;
+      visibility: hidden;
+    }
   </style>
 </head>
 <body>
@@ -568,7 +573,7 @@
   </div>
 </div>
 
-<div id="idkit-root" style="display:none"></div>
+<div id="idkit-root"></div>
 
 <audio id="intro-sound" src="/sounds/sound1.mp3" preload="auto"></audio>
 
@@ -686,7 +691,9 @@
 
   function launchIDKit() {
     closeVerifyPopup()
+    console.log('[idkit] APP_ID:', APP_ID, 'IDKit:', typeof IDKit)
     if (typeof IDKit === 'undefined' || !IDKit.IDKitWidget || !APP_ID) {
+      console.warn('[idkit] Not available, falling back to demo')
       sendProof({})
       return
     }
@@ -694,12 +701,24 @@
     ReactDOM.render(
       React.createElement(IDKit.IDKitWidget, {
         app_id: APP_ID, action: ACTION, verification_level: 'orb',
-        onSuccess: async (proof) => { await sendProof(proof); ReactDOM.unmountComponentAtNode(root) },
+        onSuccess: async (proof) => {
+          console.log('[idkit] onSuccess proof:', proof)
+          await sendProof(proof)
+          ReactDOM.unmountComponentAtNode(root)
+        },
         handleVerify: async () => {},
         autoClose: true,
       }, React.createElement('span', null)),
       root,
-      () => { const t = root.querySelector('button'); if (t) t.click() }
+      () => {
+        // Give React time to render before triggering the button
+        setTimeout(() => {
+          const t = root.querySelector('button')
+          console.log('[idkit] trigger button:', t)
+          if (t) t.click()
+          else console.warn('[idkit] No trigger button found in root')
+        }, 100)
+      }
     )
   }
 
