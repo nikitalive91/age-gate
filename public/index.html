@@ -14,10 +14,10 @@
       --text: #f0f0f0;
       --text-dim: #888;
       --border: #1e1e1e;
-      --red: #ff3333;
+      --ph-yellow: #f0a500;
+      --ph-yellow-hover: #ffb700;
       --red-dim: rgba(255, 51, 51, 0.1);
       --red-border: rgba(255, 51, 51, 0.25);
-      --green: #00d4aa;
       --green-dim: rgba(0, 212, 170, 0.08);
       --green-border: rgba(0, 212, 170, 0.25);
     }
@@ -31,21 +31,499 @@
       overflow-x: hidden;
     }
 
-    /* ── Page layout ── */
-    .page {
+    /* ── Fake blurred content behind PH gate ── */
+    #fake-bg {
+      position: fixed;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          45deg,
+          #111 0px, #111 20px,
+          #0d0d0d 20px, #0d0d0d 40px
+        );
+      z-index: 0;
+      filter: blur(8px);
+      transform: scale(1.05);
+    }
+
+    .fake-content {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+      opacity: 0.15;
+      font-size: 120px;
+      letter-spacing: 40px;
+      filter: blur(6px);
+    }
+
+    /* ── PH-style gate overlay ── */
+    #ph-gate {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: opacity 0.4s ease;
+    }
+
+    #ph-gate.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .ph-box {
+      background: #1b1b1b;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 8px 60px rgba(0,0,0,0.6);
+    }
+
+    /* PH Logo */
+    .ph-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 24px;
+    }
+
+    .ph-logo-black {
+      background: #000;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 3px 0 0 3px;
+      font-weight: 900;
+    }
+
+    .ph-logo-orange {
+      background: var(--ph-yellow);
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 0 3px 3px 0;
+      font-weight: 900;
+    }
+
+    .ph-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .ph-sub {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .ph-lock { font-size: 16px; }
+
+    .btn-ph {
+      width: 100%;
+      padding: 16px 24px;
+      background: var(--ph-yellow);
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s;
+      letter-spacing: -0.2px;
+      margin-bottom: 16px;
+    }
+
+    .btn-ph:hover { background: var(--ph-yellow-hover); }
+
+    .ph-disclaimer {
+      font-size: 11px;
+      color: #444;
+      line-height: 1.6;
+      margin-top: 16px;
+    }
+
+    .ph-disclaimer a { color: #666; text-decoration: underline; cursor: pointer; }
+
+    .ph-age-badge {
+      display: inline-block;
+      background: var(--ph-yellow);
+      color: #000;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Comparison modal (step 2) ── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    #modal-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-inner {
+      width: 100%;
+      max-width: 860px;
+      transform: translateY(24px);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #modal-overlay.visible .modal-inner {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .modal-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .modal-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      line-height: 1.15;
+      color: #fff;
+    }
+
+    .modal-sub {
+      font-size: 14px;
+      color: #555;
+      margin-top: 8px;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 620px) {
+      .cards { grid-template-columns: 1fr; }
+      .modal-title { font-size: 22px; }
+      .ph-box { padding: 28px 24px; }
+    }
+
+    .card {
+      border-radius: 14px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Left: danger */
+    .card-danger {
+      background: var(--red-dim);
+      border: 1px solid var(--red-border);
+    }
+
+    .card-danger::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top left, rgba(255,51,51,0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Scanlines */
+    .card-danger::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,0,0,0.012) 2px,
+        rgba(255,0,0,0.012) 4px
+      );
+      pointer-events: none;
+      border-radius: 14px;
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card-label-danger { color: #ff5555; }
+    .card-label-safe { color: var(--accent); }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      line-height: 1.2;
+    }
+
+    .card-danger .card-title { color: #ff7777; }
+    .card-safe .card-title { color: #fff; }
+
+    .card-icon { font-size: 40px; line-height: 1; }
+
+    /* Hover warning */
+    .danger-warning {
+      background: rgba(255,51,51,0.07);
+      border: 1px solid rgba(255,51,51,0.18);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #ffaaaa;
+      display: none;
+    }
+
+    .card-danger:hover .danger-warning { display: block; }
+
+    .danger-clown { font-size: 26px; margin-bottom: 6px; display: block; }
+
+    .danger-leak {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,51,51,0.12);
+      font-size: 11px;
+      color: rgba(255,100,100,0.5);
+      font-style: italic;
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .feat-danger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: rgba(255,100,100,0.65);
+    }
+
+    .feat-safe {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: rgba(0,212,170,0.9);
+      font-weight: 500;
+    }
+
+    .feat-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(0,212,170,0.12);
+      border: 1px solid rgba(0,212,170,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+      color: var(--accent);
+    }
+
+    /* Right: safe */
+    .card-safe {
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+    }
+
+    .card-safe::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top right, rgba(0,212,170,0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    @keyframes pulse-safe {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,170,0); }
+      50% { box-shadow: 0 0 0 4px rgba(0,212,170,0.07); }
+    }
+    .card-safe { animation: pulse-safe 3s ease-in-out infinite; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-3px); }
+      40% { transform: translateX(3px); }
+      60% { transform: translateX(-2px); }
+      80% { transform: translateX(2px); }
+    }
+    .card-danger:hover { animation: shake 0.35s ease; }
+
+    /* Buttons */
+    .btn-passport {
+      width: 100%;
+      padding: 13px 18px;
+      background: rgba(255,51,51,0.05);
+      color: rgba(255,100,100,0.3);
+      border: 1px solid rgba(255,51,51,0.12);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: not-allowed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: line-through;
+      text-decoration-color: rgba(255,51,51,0.25);
+      margin-top: auto;
+    }
+
+    .btn-worldid {
+      width: 100%;
+      padding: 15px 18px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 0 24px rgba(0,212,170,0.2);
+      margin-top: auto;
+    }
+
+    .btn-worldid:hover {
+      background: #00f0c0;
+      box-shadow: 0 0 36px rgba(0,212,170,0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-worldid:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    .world-logo { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .divider-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #444;
+      font-size: 11px;
+      margin: 2px 0;
+    }
+    .divider-line::before, .divider-line::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .btn-demo-sm {
+      width: 100%;
+      padding: 11px 18px;
+      background: transparent;
+      color: #555;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-demo-sm:hover { color: #888; border-color: rgba(255,255,255,0.12); }
+
+    .spinner {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgba(0,0,0,0.25);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Success panel ── */
+    #success-panel {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      overflow-y: auto;
+    }
+
+    .success-page {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    header {
+    .success-header-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 20px 40px;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      z-index: 1;
+      border-bottom: 1px solid #1a1a1a;
     }
 
     .logo {
@@ -54,7 +532,6 @@
       gap: 10px;
       font-weight: 700;
       font-size: 18px;
-      letter-spacing: -0.3px;
     }
 
     .logo-icon {
@@ -69,383 +546,36 @@
       color: #000;
     }
 
-    .badge {
+    .badge-green {
       font-size: 11px;
       font-weight: 600;
       padding: 3px 8px;
       border-radius: 20px;
-      background: var(--accent-dim);
+      background: rgba(0,212,170,0.1);
       color: var(--accent);
-      border: 1px solid rgba(0, 212, 170, 0.2);
+      border: 1px solid rgba(0,212,170,0.2);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    main {
+    .success-main {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 60px 20px;
-      position: relative;
-      z-index: 1;
     }
-
-    /* ── Success panel (shown after verification) ── */
-    #app-container {
-      width: 100%;
-      max-width: 560px;
-    }
-
-    /* ── Modal overlay ── */
-    #modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      pointer-events: none;
-    }
-
-    #modal-overlay.visible {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .modal-inner {
-      width: 100%;
-      max-width: 860px;
-      transform: translateY(30px);
-      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    #modal-overlay.visible .modal-inner {
-      transform: translateY(0);
-    }
-
-    .modal-header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .modal-eyebrow {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--text-dim);
-      margin-bottom: 12px;
-    }
-
-    .modal-title {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: -0.8px;
-      line-height: 1.1;
-      color: var(--text);
-    }
-
-    /* ── Cards ── */
-    .cards {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    @media (max-width: 640px) {
-      .cards { grid-template-columns: 1fr; }
-      .modal-title { font-size: 24px; }
-    }
-
-    .card {
-      border-radius: 16px;
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s ease;
-    }
-
-    /* ── Left card: Danger ── */
-    .card-danger {
-      background: var(--red-dim);
-      border: 1px solid var(--red-border);
-    }
-
-    .card-danger::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at top left, rgba(255,51,51,0.08) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    .card-label-danger {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--red);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .card-label-danger::before {
-      content: '⚠';
-      font-size: 12px;
-    }
-
-    .card-title {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      line-height: 1.2;
-    }
-
-    .card-danger .card-title { color: #ff6666; }
-    .card-safe .card-title { color: #fff; }
-
-    .card-icon-big {
-      font-size: 48px;
-      line-height: 1;
-      margin: 4px 0;
-    }
-
-    /* Warning tooltip */
-    .danger-warning {
-      background: rgba(255, 51, 51, 0.08);
-      border: 1px solid rgba(255, 51, 51, 0.2);
-      border-radius: 10px;
-      padding: 14px;
-      font-size: 13px;
-      line-height: 1.6;
-      color: #ffaaaa;
-      display: none;
-    }
-
-    .card-danger:hover .danger-warning,
-    .card-danger:focus-within .danger-warning {
-      display: block;
-    }
-
-    .danger-clown {
-      font-size: 28px;
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .danger-leak {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(255,51,51,0.15);
-      font-size: 11px;
-      color: rgba(255, 100, 100, 0.6);
-      font-style: italic;
-    }
-
-    .features-danger {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 4px 0;
-    }
-
-    .feature-row-danger {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: rgba(255, 100, 100, 0.7);
-    }
-
-    .feature-row-danger .icon { font-size: 14px; }
-
-    /* ── Right card: Safe ── */
-    .card-safe {
-      background: var(--green-dim);
-      border: 1px solid var(--green-border);
-    }
-
-    .card-safe::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at top right, rgba(0,212,170,0.08) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    .card-label-safe {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--green);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .card-label-safe::before {
-      content: '✓';
-      font-size: 12px;
-    }
-
-    .features-safe {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .feature-row-safe {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      color: rgba(0, 212, 170, 0.9);
-      font-weight: 500;
-    }
-
-    .feature-check {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: rgba(0,212,170,0.15);
-      border: 1px solid rgba(0,212,170,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      flex-shrink: 0;
-      color: var(--green);
-    }
-
-    /* ── Buttons ── */
-    .btn-passport {
-      width: 100%;
-      padding: 14px 20px;
-      background: rgba(255, 51, 51, 0.06);
-      color: rgba(255, 100, 100, 0.4);
-      border: 1px solid rgba(255, 51, 51, 0.15);
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: not-allowed;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-decoration: line-through;
-      text-decoration-color: rgba(255,51,51,0.3);
-      margin-top: auto;
-    }
-
-    .btn-worldid {
-      width: 100%;
-      padding: 16px 20px;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-      letter-spacing: -0.2px;
-      margin-top: auto;
-      box-shadow: 0 0 24px rgba(0,212,170,0.2);
-    }
-
-    .btn-worldid:hover {
-      background: #00f0c0;
-      box-shadow: 0 0 36px rgba(0,212,170,0.35);
-      transform: translateY(-1px);
-    }
-
-    .btn-worldid:active { transform: scale(0.99) translateY(0); }
-    .btn-worldid:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-
-    .world-logo {
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-    }
-
-    .divider-modal {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: var(--text-dim);
-      font-size: 12px;
-      margin: 4px 0;
-    }
-
-    .divider-modal::before, .divider-modal::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(255,255,255,0.06);
-    }
-
-    .btn-demo-modal {
-      width: 100%;
-      padding: 12px 20px;
-      background: transparent;
-      color: var(--text-dim);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .btn-demo-modal:hover {
-      border-color: rgba(255,255,255,0.15);
-      color: var(--text);
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(0,0,0,0.3);
-      border-top-color: #000;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Success state ── */
-    #success-panel { display: none; }
 
     .success-card {
       background: #111;
       border: 1px solid #1e1e1e;
       border-radius: 16px;
       padding: 32px;
+      width: 100%;
+      max-width: 520px;
     }
 
-    .success-header {
+    .success-head {
       display: flex;
       align-items: center;
       gap: 14px;
@@ -456,7 +586,7 @@
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: rgba(0, 212, 170, 0.12);
+      background: rgba(0,212,170,0.1);
       border: 2px solid var(--accent);
       display: flex;
       align-items: center;
@@ -465,37 +595,18 @@
       flex-shrink: 0;
     }
 
-    .success-title {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
-    .success-sub {
-      font-size: 13px;
-      color: var(--text-dim);
-      margin-top: 2px;
-    }
+    .success-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .success-sub { font-size: 13px; color: #666; margin-top: 2px; }
 
     .content-box {
-      background: #0e0e0e;
-      border: 1px solid #1e1e1e;
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
       border-radius: 12px;
       padding: 20px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
-
-    .content-box h3 {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .content-box p {
-      font-size: 13px;
-      color: var(--text-dim);
-      line-height: 1.6;
-    }
+    .content-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .content-box p { font-size: 13px; color: #666; line-height: 1.6; }
 
     .btn-content {
       width: 100%;
@@ -514,18 +625,17 @@
       transition: background 0.15s;
       margin-bottom: 12px;
     }
-
-    .btn-content:hover { background: rgba(0,212,170,0.18); }
+    .btn-content:hover { background: rgba(0,212,170,0.16); }
 
     #content-result {
       display: none;
-      background: #0e0e0e;
-      border: 1px solid #1e1e1e;
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
       border-radius: 12px;
       padding: 16px 20px;
       margin-bottom: 12px;
       font-size: 13px;
-      color: var(--text-dim);
+      color: #666;
       line-height: 1.6;
     }
 
@@ -533,19 +643,12 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin: 16px 0;
+      margin: 14px 0;
     }
-
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-
-    .meta-key { color: #555; }
-
+    .meta-row { display: flex; justify-content: space-between; font-size: 12px; }
+    .meta-key { color: #444; }
     .meta-val {
-      color: var(--text-dim);
+      color: #666;
       font-family: 'SF Mono', 'Fira Code', monospace;
       font-size: 11px;
       max-width: 220px;
@@ -559,8 +662,8 @@
       align-items: center;
       gap: 8px;
       padding: 10px 14px;
-      background: rgba(240, 160, 32, 0.06);
-      border: 1px solid rgba(240, 160, 32, 0.15);
+      background: rgba(240,160,32,0.06);
+      border: 1px solid rgba(240,160,32,0.14);
       border-radius: 8px;
       font-size: 12px;
       color: #f0a020;
@@ -571,102 +674,136 @@
       width: 100%;
       padding: 12px;
       background: transparent;
-      color: #555;
-      border: 1px solid #1e1e1e;
+      color: #444;
+      border: 1px solid #1a1a1a;
       border-radius: 8px;
       font-size: 13px;
       cursor: pointer;
       transition: color 0.15s;
     }
+    .btn-reset:hover { color: #888; }
 
-    .btn-reset:hover { color: var(--text); }
-
-    /* ── Footer ── */
-    footer {
-      text-align: center;
-      padding: 24px 40px;
-      border-top: 1px solid var(--border);
-      font-size: 12px;
-      color: #333;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      position: relative;
-      z-index: 1;
-    }
-
-    footer a { color: #444; text-decoration: none; }
-    footer a:hover { color: #666; }
-    .sep { opacity: 0.3; }
-
-    /* ── Pulse animation on safe card ── */
-    @keyframes pulse-border {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(0,212,170,0); }
-      50% { box-shadow: 0 0 0 4px rgba(0,212,170,0.08); }
-    }
-
-    .card-safe {
-      animation: pulse-border 3s ease-in-out infinite;
-    }
-
-    /* ── Shake animation on danger hover ── */
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-3px); }
-      40% { transform: translateX(3px); }
-      60% { transform: translateX(-2px); }
-      80% { transform: translateX(2px); }
-    }
-
-    .card-danger:hover {
-      animation: shake 0.4s ease;
-    }
-
-    /* ── Scanline overlay for danger card ── */
-    .card-danger::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(255,0,0,0.015) 2px,
-        rgba(255,0,0,0.015) 4px
-      );
-      pointer-events: none;
-      border-radius: 16px;
-    }
-
-    /* ── Hidden IDKit root ── */
     #idkit-root { display: none; }
   </style>
 </head>
 <body>
-<div class="page">
 
-  <!-- Hidden audio — plays on first interaction -->
-  <audio id="intro-sound" preload="auto">
-    <!-- User can replace src with their own drum intro file -->
-    <!-- <source src="/sounds/intro.mp3" type="audio/mpeg"> -->
-  </audio>
+  <!-- Fake blurred background (simulates 18+ content) -->
+  <div id="fake-bg"></div>
+  <div class="fake-content">🔞🔞🔞🔞</div>
 
-  <header>
-    <div class="logo">
-      <div class="logo-icon">🛡</div>
-      AgeGate
+  <!-- Step 1: Pornhub-style gate -->
+  <div id="ph-gate">
+    <div class="ph-box">
+      <div class="ph-logo">
+        <span class="ph-logo-black">Porn</span><span class="ph-logo-orange">hub</span>
+      </div>
+
+      <div class="ph-age-badge">18+</div>
+
+      <div class="ph-title">Please verify your age<br/>to access Pornhub</div>
+
+      <div class="ph-sub">
+        <span class="ph-lock">🔒</span>
+        Fast, Secure &amp; Private
+      </div>
+
+      <button class="btn-ph" onclick="showComparisonModal()">
+        Check my age &nbsp;›
+      </button>
+
+      <div class="ph-disclaimer">
+        By entering this site you swear that you are of legal age in your area to view adult material and that you wish to view such material. All models were 18 years of age or older at the time of depiction.<br/><br/>
+        <a onclick="showComparisonModal()">Privacy Policy</a> · <a onclick="showComparisonModal()">Terms of Service</a>
+      </div>
     </div>
-    <span class="badge">Privacy-First</span>
-  </header>
+  </div>
 
-  <main>
-    <div id="app-container">
+  <!-- Step 2: Comparison modal -->
+  <div id="modal-overlay">
+    <div class="modal-inner">
 
-      <!-- Success panel (shown after verification) -->
-      <div id="success-panel">
+      <div class="modal-header">
+        <div class="modal-eyebrow">Wait — how do you want to verify?</div>
+        <div class="modal-title">Not all age checks<br/>are equal</div>
+        <div class="modal-sub">The site above asked you to verify. Here's what happens next.</div>
+      </div>
+
+      <div class="cards">
+
+        <!-- Left: Danger -->
+        <div class="card card-danger" tabindex="0">
+          <div class="card-label card-label-danger">⚠ Traditional way</div>
+          <div class="card-title">Upload Your<br/>Passport / ID</div>
+          <div class="card-icon">🛂</div>
+
+          <div class="features">
+            <div class="feat-danger">📤 Full document scan required</div>
+            <div class="feat-danger">🗄️ Stored on unknown servers</div>
+            <div class="feat-danger">🔓 Shared with "partners"</div>
+            <div class="feat-danger">♾️ Kept forever</div>
+          </div>
+
+          <div class="danger-warning">
+            <span class="danger-clown">🤡</span>
+            Your passport will be stored on a server you've never heard of. Hope they don't get hacked!
+            <br/><br/>
+            <strong style="color: #ff6666;">(Spoiler: they will.)</strong>
+            <div class="danger-leak">📰 "70,000 IDs leaked in Discord breach" — TechCrunch, 2026</div>
+          </div>
+
+          <button class="btn-passport" disabled>🚫 Not Available</button>
+        </div>
+
+        <!-- Right: Safe -->
+        <div class="card card-safe">
+          <div class="card-label card-label-safe">✓ Zero-knowledge proof</div>
+          <div class="card-title">Verify with<br/>World ID</div>
+          <div class="card-icon">🛡</div>
+
+          <div class="features">
+            <div class="feat-safe"><div class="feat-check">✓</div>Zero data collected</div>
+            <div class="feat-safe"><div class="feat-check">✓</div>ZK proof — yes or no only</div>
+            <div class="feat-safe"><div class="feat-check">✓</div>One tap, 3 seconds</div>
+            <div class="feat-safe"><div class="feat-check">✓</div>Can't be hacked — nothing stored</div>
+          </div>
+
+          <div id="idkit-root"></div>
+
+          <button class="btn-worldid" id="btn-worldid" onclick="startVerification()">
+            <svg class="world-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="16" fill="#000"/>
+              <circle cx="16" cy="16" r="10" stroke="#fff" stroke-width="2" fill="none"/>
+              <circle cx="16" cy="16" r="4" fill="#fff"/>
+            </svg>
+            Verify with World ID
+          </button>
+
+          <div class="divider-line">or</div>
+
+          <button class="btn-demo-sm" id="btn-demo" onclick="simulateVerification()">
+            ⚡ Demo: Simulate Verification
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Success -->
+  <div id="success-panel">
+    <div class="success-page">
+      <div class="success-header-bar">
+        <div class="logo">
+          <div class="logo-icon">🛡</div>
+          AgeGate
+        </div>
+        <span class="badge-green">Verified</span>
+      </div>
+
+      <div class="success-main">
         <div class="success-card">
-          <div class="success-header">
+          <div class="success-head">
             <div class="success-icon">✓</div>
             <div>
               <div class="success-title">Access Granted</div>
@@ -679,7 +816,7 @@
 
           <div class="content-box">
             <h3>Protected Content</h3>
-            <p>You verified you're 18+ using a zero-knowledge proof. Your personal data was never shared with this site.</p>
+            <p>You verified you're 18+ using a zero-knowledge proof. Your personal data was never shared with this site — only a cryptographic "yes".</p>
           </div>
 
           <div class="proof-meta">
@@ -699,107 +836,15 @@
 
           <div class="demo-notice" id="demo-notice">⚡ Demo mode — no real World ID used</div>
 
-          <button class="btn-reset" onclick="resetVerification()">← Verify again</button>
+          <button class="btn-reset" onclick="resetVerification()">← Start over</button>
         </div>
       </div>
-
-    </div>
-  </main>
-
-  <footer>
-    Powered by
-    <a href="https://world.org" target="_blank">World ID</a>
-    <span class="sep">•</span>
-    <a href="https://x402.org" target="_blank">x402</a>
-    <span class="sep">•</span>
-    Built for Coinbase × World Hackathon 2026
-  </footer>
-
-</div>
-
-<!-- Modal overlay -->
-<div id="modal-overlay">
-  <div class="modal-inner">
-
-    <div class="modal-header">
-      <div class="modal-eyebrow">Age verification required</div>
-      <div class="modal-title">Choose how you want<br/>to prove your age</div>
-    </div>
-
-    <div class="cards">
-
-      <!-- Left card: Danger -->
-      <div class="card card-danger" tabindex="0">
-        <div class="card-label-danger">Traditional method</div>
-        <div class="card-title">Upload Your<br/>Passport</div>
-        <div class="card-icon-big">🛂</div>
-
-        <div class="features-danger">
-          <div class="feature-row-danger"><span class="icon">📤</span> Full document scan required</div>
-          <div class="feature-row-danger"><span class="icon">🗄️</span> Stored on unknown servers</div>
-          <div class="feature-row-danger"><span class="icon">🔓</span> Shared with "partners"</div>
-          <div class="feature-row-danger"><span class="icon">♾️</span> Kept forever</div>
-        </div>
-
-        <div class="danger-warning">
-          <span class="danger-clown">🤡</span>
-          Your passport will be stored on a server you've never heard of. Hope they don't get hacked!
-          <br/><br/>
-          <strong style="color: #ff6666;">(Spoiler: they will.)</strong>
-          <div class="danger-leak">📰 "70,000 IDs leaked in Discord breach" — TechCrunch, 2026</div>
-        </div>
-
-        <button class="btn-passport" disabled>
-          🚫 Not Available
-        </button>
-      </div>
-
-      <!-- Right card: Safe -->
-      <div class="card card-safe">
-        <div class="card-label-safe">Zero-knowledge proof</div>
-        <div class="card-title">Verify with<br/>World ID</div>
-        <div class="card-icon-big">🛡</div>
-
-        <div class="features-safe">
-          <div class="feature-row-safe">
-            <div class="feature-check">✓</div>
-            Zero data collected
-          </div>
-          <div class="feature-row-safe">
-            <div class="feature-check">✓</div>
-            ZK proof only — yes or no
-          </div>
-          <div class="feature-row-safe">
-            <div class="feature-check">✓</div>
-            One tap, 3 seconds
-          </div>
-          <div class="feature-row-safe">
-            <div class="feature-check">✓</div>
-            Can't be hacked — nothing stored
-          </div>
-        </div>
-
-        <div id="idkit-root"></div>
-
-        <button class="btn-worldid" id="btn-worldid" onclick="startVerification()">
-          <svg class="world-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="16" r="16" fill="#000"/>
-            <circle cx="16" cy="16" r="10" stroke="#fff" stroke-width="2" fill="none"/>
-            <circle cx="16" cy="16" r="4" fill="#fff"/>
-          </svg>
-          Verify with World ID
-        </button>
-
-        <div class="divider-modal">or</div>
-
-        <button class="btn-demo-modal" id="btn-demo" onclick="simulateVerification()">
-          ⚡ Demo: Simulate Verification
-        </button>
-      </div>
-
     </div>
   </div>
-</div>
+
+  <audio id="intro-sound" preload="auto">
+    <!-- <source src="/sounds/intro.mp3" type="audio/mpeg"> -->
+  </audio>
 
 <!-- React + IDKit via CDN -->
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -815,102 +860,81 @@
   async function loadConfig() {
     try {
       const res = await fetch('/config')
-      if (!res.ok) throw new Error('Failed to fetch /config: ' + res.status)
-      const config = await res.json()
-      APP_ID = config.app_id
-      ACTION = config.action
-    } catch (err) {
-      console.error('[config] Error:', err.message)
+      if (!res.ok) throw new Error('status ' + res.status)
+      const cfg = await res.json()
+      APP_ID = cfg.app_id
+      ACTION = cfg.action
+    } catch (e) {
+      console.error('[config]', e.message)
     }
   }
 
   loadConfig()
 
-  // ── Audio: plays on first click anywhere ──────────────────────────────────
+  // ── Audio on first interaction ────────────────────────────────────────────
 
   let audioPlayed = false
 
   function playIntroSound() {
     if (audioPlayed) return
     audioPlayed = true
-
-    // Try audio element first (user can drop in a file)
     const audio = document.getElementById('intro-sound')
     if (audio && audio.src && audio.src !== window.location.href) {
       audio.volume = 0.6
       audio.play().catch(() => {})
       return
     }
-
-    // Fallback: generate a simple kick drum via Web Audio API
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)()
-
-      // Kick
-      const kick = ctx.createOscillator()
-      const kickGain = ctx.createGain()
-      kick.connect(kickGain)
-      kickGain.connect(ctx.destination)
-      kick.frequency.setValueAtTime(150, ctx.currentTime)
-      kick.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4)
-      kickGain.gain.setValueAtTime(1, ctx.currentTime)
-      kickGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4)
-      kick.start(ctx.currentTime)
-      kick.stop(ctx.currentTime + 0.4)
-
-      // Hi-hat
-      const bufferSize = ctx.sampleRate * 0.1
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-      const data = buffer.getChannelData(0)
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
-      const hat = ctx.createBufferSource()
-      hat.buffer = buffer
-      const hatFilter = ctx.createBiquadFilter()
-      hatFilter.type = 'highpass'
-      hatFilter.frequency.value = 8000
-      const hatGain = ctx.createGain()
-      hat.connect(hatFilter)
-      hatFilter.connect(hatGain)
-      hatGain.connect(ctx.destination)
-      hatGain.gain.setValueAtTime(0.3, ctx.currentTime + 0.1)
-      hatGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2)
-      hat.start(ctx.currentTime + 0.1)
-    } catch (e) {
-      // Audio not supported — silent
-    }
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.setValueAtTime(120, ctx.currentTime)
+      osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35)
+      gain.gain.setValueAtTime(0.8, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.35)
+    } catch (e) {}
   }
 
   document.addEventListener('click', playIntroSound, { once: true })
-  document.addEventListener('touchstart', playIntroSound, { once: true })
 
-  // ── Modal ─────────────────────────────────────────────────────────────────
+  // ── Session restore ───────────────────────────────────────────────────────
 
-  const overlay = document.getElementById('modal-overlay')
-
-  // Show modal after 1.5s unless already verified
   const storedNullifier = localStorage.getItem('agegate_nullifier')
   if (storedNullifier) {
     showSuccess(storedNullifier, storedNullifier.startsWith('demo_'))
-  } else {
-    setTimeout(() => {
-      overlay.classList.add('visible')
-    }, 1500)
   }
 
-  function closeModal() {
-    overlay.classList.remove('visible')
-    setTimeout(() => { overlay.style.display = 'none' }, 500)
+  // ── Step 1 → Step 2 ───────────────────────────────────────────────────────
+
+  function showComparisonModal() {
+    const gate = document.getElementById('ph-gate')
+    gate.classList.add('hidden')
+    setTimeout(() => { gate.style.display = 'none' }, 400)
+
+    const modal = document.getElementById('modal-overlay')
+    modal.style.pointerEvents = 'all'
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        modal.classList.add('visible')
+      })
+    })
   }
 
-  // ── Verification state ────────────────────────────────────────────────────
+  // ── Success ───────────────────────────────────────────────────────────────
 
   function showSuccess(nullifierHash, isDemo) {
-    closeModal()
+    document.getElementById('ph-gate').style.display = 'none'
+    const modal = document.getElementById('modal-overlay')
+    modal.classList.remove('visible')
+    modal.style.display = 'none'
+
     document.getElementById('success-panel').style.display = 'block'
     document.getElementById('meta-nullifier').textContent = nullifierHash ?? '—'
-    if (isDemo) {
-      document.getElementById('demo-notice').style.display = 'flex'
-    }
+    if (isDemo) document.getElementById('demo-notice').style.display = 'flex'
   }
 
   function resetVerification() {
@@ -918,16 +942,25 @@
     document.getElementById('success-panel').style.display = 'none'
     document.getElementById('content-result').style.display = 'none'
     document.getElementById('demo-notice').style.display = 'none'
-    overlay.style.display = 'flex'
-    requestAnimationFrame(() => overlay.classList.add('visible'))
+
+    const gate = document.getElementById('ph-gate')
+    gate.style.display = 'flex'
+    gate.classList.remove('hidden')
+
+    const modal = document.getElementById('modal-overlay')
+    modal.style.display = 'flex'
+    modal.style.pointerEvents = 'none'
+    modal.classList.remove('visible')
   }
+
+  // ── Buttons state ─────────────────────────────────────────────────────────
 
   function setBtnLoading(loading) {
     const btn = document.getElementById('btn-worldid')
     const demo = document.getElementById('btn-demo')
     if (!btn) return
     btn.disabled = loading
-    demo.disabled = loading
+    if (demo) demo.disabled = loading
     if (loading) {
       btn.innerHTML = '<span class="spinner"></span> Verifying…'
     } else {
@@ -959,90 +992,79 @@
       } else {
         alert('Verification failed: ' + (data.error ?? 'Unknown error'))
       }
-    } catch (err) {
-      alert('Network error: ' + err.message)
+    } catch (e) {
+      alert('Network error: ' + e.message)
     } finally {
       setBtnLoading(false)
     }
   }
 
-  // ── Demo simulation ───────────────────────────────────────────────────────
-
   function simulateVerification() {
     setBtnLoading(true)
-    setTimeout(async () => {
-      await sendProof({})
-    }, 800)
+    setTimeout(async () => { await sendProof({}) }, 800)
   }
 
-  // ── GET /content with Bearer token ───────────────────────────────────────
+  // ── GET /content ──────────────────────────────────────────────────────────
 
   async function fetchContent() {
     const nullifier = localStorage.getItem('agegate_nullifier')
-    const resultEl = document.getElementById('content-result')
-
+    const el = document.getElementById('content-result')
     if (!nullifier) {
-      resultEl.textContent = 'No verification token found. Please verify first.'
-      resultEl.style.display = 'block'
+      el.textContent = 'No token. Please verify first.'
+      el.style.display = 'block'
       return
     }
-
     try {
       const res = await fetch('/content', {
         headers: { 'Authorization': 'Bearer ' + nullifier },
       })
       const data = await res.json()
       if (res.ok) {
-        resultEl.innerHTML =
-          '<strong style="color: var(--accent);">' + escapeHtml(data.message) + '</strong>' +
+        el.innerHTML =
+          '<strong style="color:var(--accent)">' + escapeHtml(data.message) + '</strong>' +
           '<br><br>' + escapeHtml(data.content)
-        resultEl.style.display = 'block'
       } else {
-        resultEl.textContent = 'Error ' + res.status + ': ' + (data.error ?? 'Unknown error')
-        resultEl.style.display = 'block'
+        el.textContent = 'Error ' + res.status + ': ' + (data.error ?? 'Unknown')
       }
-    } catch (err) {
-      resultEl.textContent = 'Network error: ' + err.message
-      resultEl.style.display = 'block'
+      el.style.display = 'block'
+    } catch (e) {
+      el.textContent = 'Network error: ' + e.message
+      el.style.display = 'block'
     }
   }
 
   function escapeHtml(str) {
-    const div = document.createElement('div')
-    div.textContent = str ?? ''
-    return div.innerHTML
+    const d = document.createElement('div')
+    d.textContent = str ?? ''
+    return d.innerHTML
   }
 
   // ── World ID IDKit ────────────────────────────────────────────────────────
 
   function startVerification() {
-    if (typeof IDKit === 'undefined' || !IDKit.IDKitWidget) {
+    if (typeof IDKit === 'undefined' || !IDKit.IDKitWidget || !APP_ID) {
       simulateVerification()
       return
     }
-    if (!APP_ID) {
-      simulateVerification()
-      return
-    }
-
     const root = document.getElementById('idkit-root')
-
-    const element = React.createElement(IDKit.IDKitWidget, {
-      app_id: APP_ID,
-      action: ACTION,
-      verification_level: 'orb',
-      onSuccess: async (proof) => {
-        await sendProof(proof)
-        ReactDOM.unmountComponentAtNode(root)
-      },
-      handleVerify: async () => {},
-      autoClose: true,
-    }, React.createElement('span', null))
-
-    ReactDOM.render(element, root, () => {
-      const trigger = root.querySelector('button')
-      if (trigger) trigger.click()
-    })
+    ReactDOM.render(
+      React.createElement(IDKit.IDKitWidget, {
+        app_id: APP_ID,
+        action: ACTION,
+        verification_level: 'orb',
+        onSuccess: async (proof) => {
+          await sendProof(proof)
+          ReactDOM.unmountComponentAtNode(root)
+        },
+        handleVerify: async () => {},
+        autoClose: true,
+      }, React.createElement('span', null)),
+      root,
+      () => {
+        const trigger = root.querySelector('button')
+        if (trigger) trigger.click()
+      }
+    )
   }
 </script>
 </body>
