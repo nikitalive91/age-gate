@@ -713,7 +713,7 @@ goTo('s3', 's5')
     const txt = document.getElementById('btn-upload-text')
     btn.dataset.stage = '0'
     txt.innerHTML = '📎 Upload passport'
-    document.getElementById('content-result').style.display = 'none'
+    const cr = document.getElementById('content-result'); if (cr) cr.style.display = 'none'
     ;['s2','s3','s5'].forEach(id => {
       document.getElementById(id).classList.remove('active','out')
     })
