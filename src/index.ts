@@ -160,6 +160,46 @@ app.get('/content', (c) => {
   })
 })
 
+// ─── GET /subscribe — x402 demo ──────────────────────────────────────────────
+// Human with World ID credential → free access
+// Bot / agent without credential → 402 Payment Required (x402)
+app.get('/subscribe', async (c) => {
+  const auth = c.req.header('Authorization') ?? ''
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+
+  if (token && verifiedNullifiers.has(token)) {
+    console.log('[subscribe] Human credential — free access:', token)
+    return c.json({
+      access: 'premium',
+      plan: 'human-verified',
+      cost: '$0.00',
+      message: 'World ID credential accepted. Free premium access granted.',
+      verified_human: true,
+    })
+  }
+
+  // x402 Payment Required
+  console.log('[subscribe] No credential — returning 402 x402')
+  const paymentRequired = {
+    scheme: 'exact',
+    network: 'eip155:84532', // Base Sepolia
+    maxAmountRequired: '9990000', // $9.99 USDC (6 decimals)
+    resource: c.req.url,
+    description: 'AgeGate Premium Subscription — monthly access',
+    mimeType: 'application/json',
+    payTo: '0x0000000000000000000000000000000000000000',
+    maxTimeoutSeconds: 300,
+    asset: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // USDC Base Sepolia
+    extra: { name: 'AgeGate Premium', description: 'Monthly access, full price for unverified agents' },
+  }
+  c.header('X-402-Version', '1')
+  return c.json({
+    error: 'Payment Required',
+    x402Version: 1,
+    accepts: [paymentRequired],
+  }, 402)
+})
+
 // Static files (public/) — must be last so API routes take priority
 app.use('/*', serveStatic({ root: './public' }))
 

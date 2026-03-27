@@ -541,12 +541,43 @@
       </div>
     </div>
 
-    <button onclick="goTo('s5','s6')" style="background:transparent;color:var(--accent);border:1px solid rgba(0,212,170,0.3);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;padding:10px 20px">See the product →</button>
+    <button onclick="goTo('s5','s6'); runX402Demo()" style="background:transparent;color:var(--accent);border:1px solid rgba(0,212,170,0.3);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;padding:10px 20px">See x402 in action →</button>
   </div>
 </div>
 
-<!-- ── SCREEN 6: Product pitch ────────────────────────────────────────── -->
+<!-- ── SCREEN 6: x402 live demo ───────────────────────────────────────── -->
 <div class="screen" id="s6">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center;max-width:440px;width:100%">
+    <div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">x402 Protocol</div>
+      <div style="font-size:24px;font-weight:900;letter-spacing:-0.5px;line-height:1.2">Same API. Different prices.</div>
+      <div style="font-size:14px;color:#555;margin-top:6px">Human credential = free. No credential = pay.</div>
+    </div>
+
+    <!-- Human request -->
+    <div style="width:100%;background:#0a1a14;border:1px solid rgba(0,212,170,0.2);border-radius:12px;padding:16px 18px;text-align:left;font-family:'SF Mono','Fira Code',monospace;font-size:12px;line-height:1.9">
+      <div style="color:#555;margin-bottom:2px">// Your agent — with World ID credential</div>
+      <div style="color:#888">GET <span style="color:#fff">/subscribe</span></div>
+      <div style="color:#888">Authorization: <span style="color:var(--accent)" id="x402-token-display">Bearer 0x…</span></div>
+      <div style="margin-top:8px;color:#888">← <span id="x402-human-status" style="color:#555">calling…</span></div>
+      <div id="x402-human-result" style="color:var(--accent);margin-top:2px;display:none"></div>
+    </div>
+
+    <!-- Bot request -->
+    <div style="width:100%;background:#1a0a0a;border:1px solid rgba(255,77,77,0.2);border-radius:12px;padding:16px 18px;text-align:left;font-family:'SF Mono','Fira Code',monospace;font-size:12px;line-height:1.9">
+      <div style="color:#555;margin-bottom:2px">// Unknown bot — no credential</div>
+      <div style="color:#888">GET <span style="color:#fff">/subscribe</span></div>
+      <div style="color:#888">Authorization: <span style="color:#444">none</span></div>
+      <div style="margin-top:8px;color:#888">← <span id="x402-bot-status" style="color:#555">calling…</span></div>
+      <div id="x402-bot-result" style="color:#ff4d4d;margin-top:2px;display:none"></div>
+    </div>
+
+    <button onclick="goTo('s6','s7')" style="background:transparent;color:var(--accent);border:1px solid rgba(0,212,170,0.3);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;padding:10px 20px">See the product →</button>
+  </div>
+</div>
+
+<!-- ── SCREEN 7: Product pitch ────────────────────────────────────────── -->
+<div class="screen" id="s7">
   <div style="display:flex;flex-direction:column;align-items:center;gap:32px;text-align:center;max-width:440px;width:100%">
 
     <!-- Logo -->
@@ -562,7 +593,7 @@
       <div style="color:#fff">npm install <span style="color:var(--accent)">@agegate/sdk</span></div>
       <div style="margin-top:12px;color:#555"># Integrate</div>
       <div style="color:#fff">&lt;<span style="color:var(--accent)">AgeGate</span> <span style="color:#888">onVerified=</span><span style="color:#fff">{grantAccess}</span> /&gt;</div>
-      <div style="margin-top:12px;color:#555"># Bots pay via x402, humans get in free</div>
+      <div style="margin-top:12px;color:#555"># Works with agents. Belongs to humans.</div>
     </div>
 
     <!-- Industries -->
@@ -680,6 +711,8 @@
   }
 
   // ── Verification ──────────────────────────────────────────────────────────
+  let currentNullifier = null
+
   async function sendProof(proof) {
     try {
       const res = await fetch('/verify-age', {
@@ -690,8 +723,9 @@
       const data = await res.json()
       if (data.verified) {
         const n = data.nullifier_hash ?? ''
+        currentNullifier = n
         localStorage.setItem('agegate_nullifier', n)
-goTo('s3', 's5')
+        goTo('s3', 's5')
       } else {
         alert('Verification failed: ' + (data.error ?? 'Unknown'))
       }
@@ -763,16 +797,48 @@ goTo('s3', 's5')
 
   function resetDemo() {
     localStorage.removeItem('agegate_nullifier')
+    currentNullifier = null
     uploadStage = 0
     const btn = document.getElementById('btn-upload')
     const txt = document.getElementById('btn-upload-text')
     btn.dataset.stage = '0'
     txt.innerHTML = '📎 Upload passport'
     const cr = document.getElementById('content-result'); if (cr) cr.style.display = 'none'
-    ;['s2','s3','s5','s6'].forEach(id => {
+    ;['s2','s3','s5','s6','s7'].forEach(id => {
       document.getElementById(id).classList.remove('active','out')
     })
     document.getElementById('s1').classList.add('active')
+  }
+
+  async function runX402Demo() {
+    const nullifier = currentNullifier || localStorage.getItem('agegate_nullifier')
+    const tokenEl = document.getElementById('x402-token-display')
+    if (tokenEl && nullifier) tokenEl.textContent = 'Bearer ' + nullifier.slice(0,10) + '…'
+
+    // human call — with credential
+    const humanStatus = document.getElementById('x402-human-status')
+    const humanResult = document.getElementById('x402-human-result')
+    try {
+      const r = await fetch('/subscribe', { headers: nullifier ? { Authorization: 'Bearer ' + nullifier } : {} })
+      const d = await r.json()
+      humanStatus.textContent = r.ok ? '200 OK' : r.status + ''
+      humanStatus.style.color = r.ok ? 'var(--accent)' : '#ff4d4d'
+      humanResult.textContent = r.ok ? 'cost: ' + d.cost + ' — ' + d.message : d.error
+      humanResult.style.display = 'block'
+    } catch(e) { humanStatus.textContent = 'error' }
+
+    // bot call — without credential
+    await new Promise(r => setTimeout(r, 700))
+    const botStatus = document.getElementById('x402-bot-status')
+    const botResult = document.getElementById('x402-bot-result')
+    try {
+      const r = await fetch('/subscribe')
+      const d = await r.json()
+      botStatus.textContent = '402 Payment Required'
+      botStatus.style.color = '#ff4d4d'
+      botResult.textContent = 'x402 — $' + (d.accepts[0].maxAmountRequired/1e6).toFixed(2) + '/month'
+      botResult.style.display = 'block'
+    } catch(e) { botStatus.textContent = 'error' }
   }
 
   // Session restore
