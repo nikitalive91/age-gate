@@ -497,8 +497,21 @@
 <!-- ── SCREEN 3: Upload passport + morphing button ───────────────────── -->
 <div class="screen" id="s3">
   <div class="passport-card">
-    <div class="passport-emoji">🛂</div>
-    <div class="passport-text">Upload your passport<br/>to verify your age</div>
+    <div class="passport-emoji" id="passport-emoji">🛂
+      <svg id="agegate-logo" width="90" height="90" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <!-- Background -->
+        <rect width="80" height="80" rx="20" fill="#0d0d0d"/>
+        <!-- Gate arch -->
+        <path d="M19 40 Q19 15 40 15 Q61 15 61 40" stroke="#00d4aa" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <!-- Left pillar -->
+        <rect x="15" y="37" width="9" height="24" rx="3" fill="#00d4aa"/>
+        <!-- Right pillar -->
+        <rect x="56" y="37" width="9" height="24" rx="3" fill="#00d4aa"/>
+        <!-- Checkmark -->
+        <path d="M29 51 L37 59 L53 41" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="passport-text" id="passport-text">Upload your passport<br/>to verify your age</div>
     <div class="btn-cancel-wrap">
       <button class="btn-cancel" id="btn-upload" data-stage="0" onclick="advanceUploadStage()">
         <div class="btn-text" id="btn-upload-text">📎 Upload passport</div>
@@ -722,11 +735,27 @@
     uploadStage++
     const btn = document.getElementById('btn-upload')
     const txt = document.getElementById('btn-upload-text')
+    const ptxt = document.getElementById('passport-text')
     txt.classList.add('fade')
     setTimeout(() => {
       btn.dataset.stage = UPLOAD_STAGES[uploadStage].stage
       txt.innerHTML = UPLOAD_STAGES[uploadStage].html
       txt.classList.remove('fade')
+      if (UPLOAD_STAGES[uploadStage].stage === '3') {
+        ptxt.style.transition = 'opacity 0.3s'
+        ptxt.style.opacity = '0'
+        const emoji = document.getElementById('passport-emoji')
+        const logo = document.getElementById('agegate-logo')
+        emoji.style.transition = 'opacity 0.3s'
+        emoji.style.opacity = '0'
+        setTimeout(() => {
+          ptxt.innerHTML = 'Powered by AgeGate'
+          ptxt.style.opacity = '1'
+          emoji.childNodes[0].textContent = ''
+          logo.style.display = 'block'
+          emoji.style.opacity = '1'
+        }, 300)
+      }
     }, 200)
   }
 
