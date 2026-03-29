@@ -1,6 +1,10 @@
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
+import { verifiedNullifiers } from './store'
+
+// Re-export so middleware and consumers can import from index
+export { verifiedNullifiers } from './store'
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
@@ -48,9 +52,7 @@ interface ContentErrorResponse {
   status: number
 }
 
-// ─── In-memory storage ──────────────────────────────────────────────────────
-
-const verifiedNullifiers: Set<string> = new Set()
+// ─── In-memory storage (imported from ./store) ─────────────────────────────
 
 // ─── App ────────────────────────────────────────────────────────────────────
 

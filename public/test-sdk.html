@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Site — Age Restricted</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    h1 { font-size: 32px; margin-bottom: 16px; }
+    p  { color: #aaa; font-size: 16px; line-height: 1.6; margin-bottom: 12px; }
+    .badge {
+      display: inline-block;
+      background: #00d4aa22;
+      color: #00d4aa;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+    #token-display {
+      margin-top: 24px;
+      padding: 16px;
+      background: #1a1a1a;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #666;
+      word-break: break-all;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Premium Adult Content</h1>
+  <p>This content is age-restricted and requires World ID verification.</p>
+  <p>If you see this text, you have been verified (or the overlay is not loaded).</p>
+  <div class="badge" id="status-badge">Checking...</div>
+  <div id="token-display"></div>
+
+  <!-- AgeGate SDK -->
+  <script src="/sdk.js"
+    data-app-id="app_8bedf5fdcc4282c37afa05f39b31998e"
+    data-action="verify-age"
+    data-server="http://localhost:4021">
+  </script>
+
+  <script>
+    document.addEventListener('agegate:verified', function (e) {
+      var badge = document.getElementById('status-badge')
+      badge.textContent = 'Age Verified'
+      badge.style.background = '#00d4aa33'
+
+      var display = document.getElementById('token-display')
+      display.style.display = 'block'
+      display.textContent = 'Token: ' + e.detail.token
+    })
+  </script>
+</body>
+</html>

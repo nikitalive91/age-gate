@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgeGate — Verify</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --accent: #00d4aa;
+      --bg: #0a0a0a;
+    }
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .logo {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 32px;
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    .subtitle span { color: var(--accent); font-weight: 600; }
+
+    #status {
+      font-size: 14px;
+      color: #888;
+      margin-top: 20px;
+    }
+    #status.success { color: var(--accent); }
+    #status.error   { color: #ff4444; }
+
+    .verify-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 14px 36px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 0 30px rgba(0,212,170,0.25);
+    }
+    .verify-btn:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 50px rgba(0,212,170,0.4);
+    }
+    .verify-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .demo-link {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #555;
+      cursor: pointer;
+      text-decoration: underline;
+      border: none;
+      background: none;
+    }
+    .demo-link:hover { color: #888; }
+
+    .footer-note {
+      position: fixed;
+      bottom: 20px;
+      font-size: 11px;
+      color: #444;
+      max-width: 300px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <div class="logo">
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="80" height="80" rx="20" fill="#0d0d0d"/>
+      <path d="M19 40 Q19 15 40 15 Q61 15 61 40" stroke="#00d4aa" stroke-width="8" fill="none" stroke-linecap="round"/>
+      <rect x="15" y="37" width="9" height="24" rx="3" fill="#00d4aa"/>
+      <rect x="56" y="37" width="9" height="24" rx="3" fill="#00d4aa"/>
+      <path d="M29 51 L37 59 L53 41" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </div>
+
+  <h1>Verify your age</h1>
+  <p class="subtitle">Powered by <span>AgeGate</span> — zero-knowledge proof via World ID</p>
+
+  <button class="verify-btn" id="verify-btn" onclick="startVerification()">
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="14" stroke="#000" stroke-width="2.5"/>
+      <circle cx="16" cy="16" r="6" stroke="#000" stroke-width="2.5"/>
+      <line x1="16" y1="2" x2="16" y2="8" stroke="#000" stroke-width="2"/>
+      <line x1="16" y1="24" x2="16" y2="30" stroke="#000" stroke-width="2"/>
+    </svg>
+    Verify with World ID
+  </button>
+
+  <button class="demo-link" onclick="demoVerify()">Skip — use demo mode</button>
+
+  <div id="status"></div>
+
+  <div class="footer-note">
+    Your identity is never shared. World ID uses zero-knowledge proofs to verify age without revealing personal data.
+  </div>
+
+  <!-- Load IDKit bundle from same server -->
+  <script src="/bundle.js"></script>
+  <script>
+    // ── Config ──────────────────────────────────────────────────────────────
+    const SERVER = window.location.origin
+    let APP_ID  = ''
+    let ACTION  = ''
+
+    const statusEl = document.getElementById('status')
+    const btnEl    = document.getElementById('verify-btn')
+
+    function setStatus(text, cls) {
+      statusEl.textContent = text
+      statusEl.className = cls || ''
+    }
+
+    // Fetch config from server
+    async function loadConfig() {
+      try {
+        const res  = await fetch(SERVER + '/config')
+        const data = await res.json()
+        APP_ID = data.app_id
+        ACTION = data.action
+        console.log('[verify] Config loaded:', data)
+      } catch (err) {
+        console.error('[verify] Failed to load config:', err)
+        setStatus('Failed to load configuration', 'error')
+      }
+    }
+
+    loadConfig()
+
+    // ── World ID Verification ───────────────────────────────────────────────
+    function startVerification() {
+      if (!APP_ID) {
+        setStatus('Configuration not loaded — please wait...', 'error')
+        return
+      }
+
+      btnEl.disabled = true
+      setStatus('Opening World ID...')
+
+      // Check if IDKit is available from the bundle
+      if (window.IDKit && window.IDKit.IDKitWidget) {
+        // Use the bundled IDKit
+        try {
+          window.IDKit.IDKitWidget.init({
+            app_id: APP_ID,
+            action: ACTION,
+            signal: '',
+            verification_level: 'orb',
+            handleVerify: async (proof) => {
+              setStatus('Verifying proof...')
+              await submitProof(proof)
+            },
+            onSuccess: () => {
+              console.log('[verify] IDKit success callback')
+            },
+            onError: (err) => {
+              console.error('[verify] IDKit error:', err)
+              setStatus('Verification failed: ' + (err.message || 'unknown error'), 'error')
+              btnEl.disabled = false
+            },
+          })
+          window.IDKit.IDKitWidget.open()
+        } catch (err) {
+          console.error('[verify] IDKit init error:', err)
+          setStatus('IDKit error — try demo mode', 'error')
+          btnEl.disabled = false
+        }
+      } else {
+        // Fallback: redirect to World ID web verify
+        setStatus('IDKit not available — use demo mode for testing', 'error')
+        btnEl.disabled = false
+      }
+    }
+
+    // ── Submit proof to server ──────────────────────────────────────────────
+    async function submitProof(proof) {
+      try {
+        const res = await fetch(SERVER + '/verify-age', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(proof),
+        })
+
+        const data = await res.json()
+
+        if (data.verified && data.nullifier_hash) {
+          onVerified(data.nullifier_hash)
+        } else {
+          setStatus('Verification failed: ' + (data.error || 'unknown'), 'error')
+          btnEl.disabled = false
+        }
+      } catch (err) {
+        setStatus('Network error — please try again', 'error')
+        btnEl.disabled = false
+      }
+    }
+
+    // ── Demo mode (no World ID) ─────────────────────────────────────────────
+    async function demoVerify() {
+      setStatus('Creating demo credential...')
+      try {
+        const res = await fetch(SERVER + '/verify-age', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        })
+        const data = await res.json()
+        if (data.verified && data.nullifier_hash) {
+          onVerified(data.nullifier_hash)
+        } else {
+          setStatus('Demo failed: ' + (data.error || 'unknown'), 'error')
+        }
+      } catch (err) {
+        setStatus('Network error', 'error')
+      }
+    }
+
+    // ── Post result back to opener ──────────────────────────────────────────
+    function onVerified(token) {
+      setStatus('Verified!', 'success')
+
+      // If opened as popup, send token back to parent
+      if (window.opener) {
+        window.opener.postMessage(
+          { type: 'agegate-verified', token: token },
+          '*'
+        )
+        setTimeout(() => window.close(), 800)
+      }
+
+      // If opened with redirect param, go back
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect')
+      if (redirect) {
+        setTimeout(() => {
+          window.location.href = redirect + '#agegate_token=' + encodeURIComponent(token)
+        }, 800)
+      }
+    }
+  </script>
+</body>
+</html>

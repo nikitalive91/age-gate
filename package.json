@@ -1,8 +1,25 @@
 {
-  "name": "agegate",
+  "name": "@agegate/sdk",
   "version": "1.0.0",
   "description": "Privacy-first age verification middleware using World ID ZKPs",
   "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./middleware": {
+      "import": "./dist/middleware.js",
+      "require": "./dist/middleware.js",
+      "types": "./dist/middleware.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "public/sdk.js",
+    "public/verify.html"
+  ],
   "scripts": {
     "build:frontend": "esbuild src/frontend.jsx --bundle --outfile=public/bundle.js --loader:.jsx=jsx --define:process.env.NODE_ENV='\"production\"' --minify",
     "start": "npm run build:frontend && tsx src/index.ts",
